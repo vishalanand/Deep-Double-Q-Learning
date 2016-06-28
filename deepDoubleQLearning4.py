@@ -1,16 +1,14 @@
-
 import tensorflow as tf
-import cv2
-import sys
-import numpy, argparse, os, re, random, math, copy
+import cv2, sys, random, select
 sys.path.append("Wrapped Game Code/")
-import pong_fun as game# whichever is imported "as game" will be used
-import dummy_game
-import tetris_fun
-import random
-import numpy as np
-from collections import deque
+
+# whichever is imported "as game" will be used
+import pong_fun as game
+
+import dummy_game, tetris_fun
+import argparse, numpy as np
 import matplotlib.pyplot as plt
+from collections import deque
 
 def weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev = 0.01)
@@ -21,9 +19,11 @@ def bias_variable(shape):
     return tf.Variable(initial)
 
 def conv2d(x, W, stride):
+    #VALID means no padding, SAME has same spatial features
     return tf.nn.conv2d(x, W, strides = [1, stride, stride, 1], padding = "SAME")
 
 def max_pool_2x2(x):
+    #VALID means no padding, SAME has same spatial features
     return tf.nn.max_pool(x, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1], padding = "SAME")
 
 def createNetwork(s_net):
@@ -46,7 +46,7 @@ def createNetwork(s_net):
     # input layer
     #s_net = tf.placeholder("float", [None, 80, 80, 4])
 
-    # hidden layers
+    # hidden layers (with weights and biases)
     h_conv1 = tf.nn.relu(conv2d(s_net, W_conv1, 4) + b_conv1)
     h_pool1 = max_pool_2x2(h_conv1)
 
@@ -73,7 +73,36 @@ def getTrainStep( readOut ):
     cost_train = tf.reduce_mean(tf.square(y_train - readout_action_train))
     trainStep = tf.train.AdamOptimizer(1e-5).minimize(cost_train)
     return [trainStep, y_train, a_train]
-    
+
+def ask_ok(prompt, retries=4, complaint='Yes or no, please!'):
+    while True:
+        ok = input(prompt)
+        ok.lower()
+        if ok in ('y', 'ye', 'yes'):
+            return True
+        if ok in ('n', 'no', 'nop', 'nope'):
+            return False
+        retries = retries - 1
+        if retries < 0:
+            raise IOError('uncooperative user')
+        print(complaint)
+
+def yes_or_no(question):
+    #reply = str(raw_input(question+' (y/n): ')).lower().strip()
+    #i, o, e = select.select( [sys.stdin], [], [], 2 )
+    print question + " (y/n): "
+    i, o, e = select.select( [sys.stdin], [], [], 2 )
+    if (i):
+        reply = sys.stdin.readline().strip()
+        if reply[0] == 'y':
+            return True
+        if reply[0] == 'n':
+            return False
+        else:
+            return yes_or_no("Uhhhh... please enter ")
+    else:
+        return False
+
 def trainNetwork(s, readout_net1,readout_net2, readout_netb1,readout_netb2,sess):
     # define the cost function
     [train_step_net1, y_net1, a_net1] = getTrainStep( readout_net1 )
@@ -87,8 +116,7 @@ def trainNetwork(s, readout_net1,readout_net2, readout_netb1,readout_netb2,sess)
 
     # store the previous observations in replay memory
     D = deque()
-    print "The game is " + args.game_log_name
-
+    
     # printing
     a_file = open("logs_" + args.game_log_name + "/readout.txt", 'w')
     h_file = open("logs_" + args.game_log_name + "/hidden.txt", 'w')
@@ -98,17 +126,15 @@ def trainNetwork(s, readout_net1,readout_net2, readout_netb1,readout_netb2,sess)
     do_nothing[0] = 1
     x_t, r_0,r_1, terminal = game_state.frame_step(do_nothing,do_nothing)
     x_t = cv2.cvtColor(cv2.resize(x_t, (80, 80)), cv2.COLOR_BGR2GRAY)
-    #fig = plt.figure()
-    #plt.imshow(x_t)
-    #fig.savefig('trrr.png')
-
     ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
     s_t = np.stack((x_t, x_t, x_t, x_t), axis = 2)
-    fig = plt.figure()
-    plt.imshow(x_t.T)
-    fig.savefig('trrr.png')
+    if(args.figure):
+        fig = plt.figure()
+        plt.imshow(x_t.T)
+        fig.savefig(args.figure_name)
+
     import time
-    time.sleep(5) 
+    #time.sleep(5)
     # saving and loading networks
     saver = tf.train.Saver()
     sess.run(tf.initialize_all_variables())
@@ -211,13 +237,21 @@ def trainNetwork(s, readout_net1,readout_net2, readout_netb1,readout_netb2,sess)
             h_file.write(",".join([str(x) for x in h_fc1.eval(feed_dict={s:[s_t]})[0]]) + '\n')
             cv2.imwrite("logs_tetris/frame" + str(t) + ".png", x_t1)
         '''
+        if(t and t % args.terminate_prompt == 0):
+            print "TIMESTEP = " + str(t)
+            if(yes_or_no("Want to terminate the code")):
+                return
+            else:
+                continue
 
 def playGame():
     sess = tf.InteractiveSession()
     s = tf.placeholder("float", [None, 80, 80, 4])
+    #Player 1
     readout_net1, h_fc1_net1 = createNetwork(s)
     readout_net2, h_fc1_net2 = createNetwork(s)
     
+    #Player 2
     readout_netb1, h_fc1_netb1 = createNetwork(s)
     readout_netb2, h_fc1_netb2 = createNetwork(s)
 
@@ -241,6 +275,9 @@ if __name__ == "__main__":
     parser.add_argument("-bat", "--mini-batch", help="Size of minibatch", type=int, default=32)
     parser.add_argument("-k", "--k", help="only select an action every Kth frame, repeat prev for others", type=int, default=2)
     parser.add_argument("-switchnet", "--switch-net", help="Set a lower bound for word frequencies", type=int, default=10)
+    parser.add_argument("-fig", "--figure", help="save figure", action="store_true")
+    parser.add_argument("-figname", "--figure-name", help="figure name", default="trrr.png")
+    parser.add_argument("-terminateprompt", "--terminate-prompt", help="terminate step prompt ", type=int, default=1000)
     parser.add_argument("-v", "--verbosity", help="increase output verbosity", action="store_true")
     parser.add_argument("-arg", "--arguments", help="print out the arguments entered", action="store_true")
     args = parser.parse_args()
@@ -258,6 +295,9 @@ if __name__ == "__main__":
         print "args.mini_batch"         + "\t" + str(args.mini_batch)
         print "args.k"                  + "\t" + str(args.k)
         print "args.switch_net"         + "\t" + str(args.switch_net)
+        print "args.figure"             + "\t" + str(args.figure)
+        print "args.figure_name"        + "\t" + str(args.figure_name)
+        print "args.terminate_prompt"   + "\t" + str(args.terminate_prompt)
         print "args.verbosity"          + "\t" + str(args.verbosity)
         print "args.arguments"          + "\t" + str(args.arguments) + "\n"
     main()

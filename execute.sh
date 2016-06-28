@@ -10,5 +10,8 @@ python deepDoubleQLearning4.py \
 	-bat 32 \
 	-k 2 \
 	-switchnet 10 \
+	-fig \
+	-figname saveTrrr.png \
+	-terminateprompt 1000 \
 	-v \
 	-arg
