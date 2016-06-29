@@ -11,38 +11,19 @@ import matplotlib.pyplot as plt
 from collections import deque
 from threading import Thread
 import subprocess
+#from deepDoubleQLearning main
 import deepDoubleQLearning
 
 def main():
-  t1 = Thread(target=deepDoubleQLearning.main(), args=args)
-  t2 = Thread(target=deepDoubleQLearning, args=args)
-  t3 = Thread(target=deepDoubleQLearning, args=args)
-  t4 = Thread(target=deepDoubleQLearning, args=args)
-  t5 = Thread(target=deepDoubleQLearning, args=args)
-  t6 = Thread(target=deepDoubleQLearning, args=args)
-  t7 = Thread(target=deepDoubleQLearning, args=args)
-  t8 = Thread(target=deepDoubleQLearning, args=args)
-
+  t1 = Thread(target=python deepDoubleQLearning, args=())
+  t2 = Thread(target=python deepDoubleQLearning, args=())
+  subprocess.call(" python script2.py 1", shell=True)
 
   t1.start()
   t2.start()
-  t3.start()
-  t4.start()
-  t5.start()
-  t6.start()
-  t7.start()
-  t8.start()
 
   t1.join()
   t2.join()
-  t3.join()
-  t4.join()
-  t5.join()
-  t6.join()
-  t7.join()
-  t8.join()
-
-  playGame()
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -84,5 +65,3 @@ if __name__ == "__main__":
     print "args.verbosity"          + "\t" + str(args.verbosity)
     print "args.arguments"          + "\t" + str(args.arguments) + "\n"
   main()
-  #numpy.savetxt("logs/"+"W1.csv", W1, delimiter=",")
-  #numpy.savetxt("logs/"+"W2.csv", W2, delimiter=",")
