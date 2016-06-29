@@ -4,7 +4,6 @@ sys.path.append("Wrapped Game Code/")
 
 # whichever is imported "as game" will be used
 import pong_fun as game
-
 import dummy_game, tetris_fun
 import argparse, numpy as np
 import matplotlib.pyplot as plt
