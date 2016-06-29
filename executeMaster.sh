@@ -1,4 +1,4 @@
-python deepDoubleQLearning.py \
+python master.py \
 	-game pong \
 	-actions 3 \
 	-gamma 0.99 \
@@ -12,6 +12,6 @@ python deepDoubleQLearning.py \
 	-switchnet 10 \
 	-fig \
 	-figname saveTrrr.png \
-	-terminateprompt 10000 \
+	-terminateprompt 100 \
 	-v \
 	-arg
