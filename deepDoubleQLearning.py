@@ -194,6 +194,26 @@ def trainNetwork(s, readout_net1,readout_net2, readout_netb1,readout_netb2,sess)
             x_t1 = np.reshape(x_t1, (80, 80, 1))
             s_t1 = np.append( s_t[:,:,1:],x_t1, axis = 2)
             # store the transition in D
+            '''
+            if t==5:
+                fig1 = plt.figure()
+                plt.imshow(s_t[:,:,0].T)
+                fig1.savefig('trrr_1.png')
+
+                fig2 = plt.figure()
+                plt.imshow(s_t[:,:,1].T)
+                fig2.savefig('trrr_2.png')
+
+                fig3 = plt.figure()
+                plt.imshow(s_t[:,:,2].T)
+                fig3.savefig('trrr_3.png')
+
+                fig4 = plt.figure()
+                plt.imshow(s_t[:,:,3].T)
+                fig4.savefig('trrr_4.png')
+
+                time.sleep(5)
+            '''
             D.append((s_t, a_t, r_t,a_bt,r_bt, s_t1, terminal))
             if len(D) > args.replay_memory:
                 D.popleft()
@@ -203,8 +223,47 @@ def trainNetwork(s, readout_net1,readout_net2, readout_netb1,readout_netb2,sess)
             
             cnt = cnt+1
             # sample a minibatch to train on
+            '''
+            minibatch = random.sample(D, BATCH)
+
+            # get the batch variables
+            s_j_batch = [d[0] for d in minibatch]
+            a_batch = [d[1] for d in minibatch]
+            r_batch = [d[2] for d in minibatch]
+
+            ab_batch = [d[3] for d in minibatch]
+            rb_batch = [d[4] for d in minibatch]
+
+            s_j1_batch = [d[5] for d in minibatch]
+
+            y_batch = []
+            yb_batch = []
+
+            if net_flag == 0:
+                readout_j1_batch = readout_net2.eval(feed_dict = {s : s_j1_batch})
+                readoutb_j1_batch = readout_netb2.eval(feed_dict = {s : s_j1_batch})
+            else:
+                readout_j1_batch = readout_net1.eval(feed_dict = {s : s_j1_batch})
+                readoutb_j1_batch = readout_netb1.eval(feed_dict = {s : s_j1_batch})
+
+            for i in range(0, len(minibatch)):
+                # if terminal only equals reward
+                if minibatch[i][6]:
+                    y_batch.append(r_batch[i])
+                    yb_batch.append(rb_batch[i])
+                else:
+                    y_batch.append(r_batch[i] + GAMMA * np.max(readout_j1_batch[i]))
+                    yb_batch.append(rb_batch[i] + GAMMA * np.max(readoutb_j1_batch[i]))
+
+            # perform gradient step
+            if net_flag == 0:
+                train_step_net2.run( feed_dict = {y_net2 : y_batch,a_net2 : a_batch, s : s_j_batch} )
+                train_step_netb2.run( feed_dict = {y_netb2 : yb_batch,a_netb2 : ab_batch, s : s_j_batch} )
+            else:
+                train_step_net1.run( feed_dict = {y_net1 : y_batch,a_net1 : a_batch, s : s_j_batch} )
+                train_step_netb1.run( feed_dict = {y_netb1 : yb_batch,a_netb1 : ab_batch, s : s_j_batch} )
+            '''
         # update the old values
-			
             if cnt % args.switch_net == 0:
                 if net_flag == 0:
                     net_flag = 1
