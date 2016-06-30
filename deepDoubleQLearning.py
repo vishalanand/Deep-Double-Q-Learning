@@ -1,16 +1,6 @@
-import tensorflow as tf
-import cv2, sys, random, select
-import copy
+import sys, copy, argparse, subprocess
 sys.path.append("Wrapped Game Code/")
-
-# whichever is imported "as game" will be used
-import pong_fun as game
-import dummy_game, tetris_fun
-import argparse, numpy as np
-import matplotlib.pyplot as plt
 from threading import Thread
-import subprocess
-from collections import deque
 from DoubleQLearning import DoubleDeepQLearning
 
 def main():
@@ -67,4 +57,3 @@ if __name__ == "__main__":
     print "args.verbosity"          + "\t" + str(args.verbosity)
     print "args.arguments"          + "\t" + str(args.arguments) + "\n"
   main()
-  

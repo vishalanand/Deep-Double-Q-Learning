@@ -16,7 +16,7 @@ class DoubleDeepQLearning:
   def __init__(self, argsCallPassed):
     self.argsPassed = copy.deepcopy(argsCallPassed)
     self.playGame()
-    
+
   def weight_variable(self, shape):
     initial = tf.truncated_normal(shape, stddev = 0.01)
     return tf.Variable(initial)
@@ -100,7 +100,8 @@ class DoubleDeepQLearning:
     [train_step_netb2, y_netb2, a_netb2] = self.getTrainStep( readout_netb2 )
     
     # open up a game state to communicate with emulator
-    game_state = game.GameState()
+    #self.game = copy.deepcopy(game)
+    self.game_state = game.GameState()
 
     # store the previous observations in replay memory
     D = deque()
@@ -112,7 +113,7 @@ class DoubleDeepQLearning:
     # get the first state by doing nothing and preprocess the image to 80x80x4
     do_nothing = np.zeros(self.argsPassed.action_count)
     do_nothing[0] = 1
-    x_t, r_0,r_1, terminal = game_state.frame_step(do_nothing,do_nothing)
+    x_t, r_0,r_1, terminal = self.game_state.frame_step(do_nothing,do_nothing)
     x_t = cv2.cvtColor(cv2.resize(x_t, (80, 80)), cv2.COLOR_BGR2GRAY)
     ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
     s_t = np.stack((x_t, x_t, x_t, x_t), axis = 2)
@@ -177,7 +178,7 @@ class DoubleDeepQLearning:
       
       for i in range(0, self.argsPassed.k):
         # run the selected action and observe next state and reward
-        x_t1_col, r_t,r_bt, terminal = game_state.frame_step(a_t,a_bt)
+        x_t1_col, r_t,r_bt, terminal = self.game_state.frame_step(a_t,a_bt)
         x_t1 = cv2.cvtColor(cv2.resize(x_t1_col, (80, 80)), cv2.COLOR_BGR2GRAY)
         ret, x_t1 = cv2.threshold(x_t1,1,255,cv2.THRESH_BINARY)
         x_t1 = np.reshape(x_t1, (80, 80, 1))
@@ -271,7 +272,7 @@ class DoubleDeepQLearning:
       else:
         state = "train"
       #if r_t != 0:
-      #  print "TIMESTEP", t, "/ STATE", state, "/ LINES", game_state.total_lines, "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, "/ Q_MAX %e" % np.max(readout_t)
+      #  print "TIMESTEP", t, "/ STATE", state, "/ LINES", self.game_state.total_lines, "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, "/ Q_MAX %e" % np.max(readout_t)
 
       if r_bt != 0:
         print "TIMESTEP", t, "/ STATE", state, "/ EPSILON", epsilon, "/ ACTION", action_indexb, "/ REWARD", r_bt, "/ Q_MAX %e" % np.max(readout_bt)

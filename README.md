@@ -6,3 +6,6 @@ Deep Double Q Learning
 $ sudo chmod +x execute.sh
 $ ./execute.sh
 ```
+
+### TODOS
+There's some issue with running multiple instances of the simulator parallelly
