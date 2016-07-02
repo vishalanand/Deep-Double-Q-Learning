@@ -18,12 +18,16 @@ class DoubleDeepQLearning:
     self.playGame()
 
   def weight_variable(self, shape):
-    initial = tf.truncated_normal(shape, stddev = 0.01)
-    return tf.Variable(initial)
+    '''
+    self.initial = tf.truncated_normal(shape, stddev = 0.01)
+    return tf.Variable(self.initial)
+    '''
+    return tf.Variable(tf.truncated_normal(shape, stddev = 0.01))
 
   def bias_variable(self, shape):
-    initial = tf.constant(0.01, shape = shape)
-    return tf.Variable(initial)
+    #self.initial = tf.constant(0.01, shape = shape)
+    #return tf.Variable(initial)
+    return tf.Variable(tf.constant(0.01, shape = shape))
 
   def conv2d(self, x, W, stride):
     #VALID means no padding, SAME has same spatial features

@@ -9,3 +9,4 @@ $ ./execute.sh
 
 ### TODOS
 There's some issue with running multiple instances of the simulator parallelly
+Maybe this will work: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/g3doc/how_tos/threading_and_queues/index.md

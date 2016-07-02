@@ -12,6 +12,6 @@ python deepDoubleQLearning.py \
 	-switchnet 10 \
 	-fig \
 	-figname saveTrrr.png \
-	-terminateprompt 100 \
+	-terminateprompt 100000 \
 	-v \
 	-arg
