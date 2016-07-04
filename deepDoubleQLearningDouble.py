@@ -1,7 +1,7 @@
 import sys, copy, argparse, subprocess
 sys.path.append("Wrapped Game Code/")
 from threading import Thread
-from DoubleQLearning import DoubleDeepQLearning
+from DoubleQLearning_2_player import DoubleDeepQLearning
 
 def main():
   '''
@@ -9,7 +9,7 @@ def main():
   obj2 = DoubleDeepQLearning(args)
   '''
   t1 = Thread(target=DoubleDeepQLearning, args=(args,))
-  t2 = Thread(target=DoubleDeepQLearning, args=(args,))
+  #t2 = Thread(target=DoubleDeepQLearning, args=(args,))
 
   t1.start()
   t2.start()

@@ -4,7 +4,7 @@ import copy
 sys.path.append("Wrapped Game Code/")
 
 # whichever is imported "as game" will be used
-import pong_fun as game
+import pong_fun_DoublePlayer as game
 import dummy_game, tetris_fun
 import argparse, numpy as np
 import matplotlib.pyplot as plt
@@ -89,136 +89,127 @@ class DoubleDeepQLearning:
     else:
       return False
 
-  def trainNetwork(self, s, readout_net1, readout_net2, readout_netb1,readout_netb2,sess):
-  #def trainNetwork(self, s, readout_net1, readout_netb1, sess):
-  #def trainNetwork(self, s, sess):
+  def trainNetwork(self, s, readout_net1,readout_net2, readout_netb1,readout_netb2,sess):
     # define the cost function
-    self.s = s
-    self.readout_net1 = readout_net1
-    self.readout_net2 = readout_net2
-    self.readout_netb1 = readout_netb1
-    self.readout_netb2 = readout_netb2
-    self.sess = sess
-
-    [self.train_step_net1, self.y_net1, self.a_net1] = self.getTrainStep( self.readout_net1 )
-    [self.train_step_net2, self.y_net2, self.a_net2] = self.getTrainStep( self.readout_net2 )
+    [train_step_net1, y_net1, a_net1] = self.getTrainStep( readout_net1 )
+    [train_step_net2, y_net2, a_net2] = self.getTrainStep( readout_net2 )
     
-    [self.train_step_netb1, self.y_netb1, self.a_netb1] = self.getTrainStep( self.readout_netb1 )
-    [self.train_step_netb2, self.y_netb2, self.a_netb2] = self.getTrainStep( self.readout_netb2 )
+    [train_step_netb1, y_netb1, a_netb1] = self.getTrainStep( readout_netb1 )
+    [train_step_netb2, y_netb2, a_netb2] = self.getTrainStep( readout_netb2 )
     
     # open up a game state to communicate with emulator
     #self.game = copy.deepcopy(game)
     self.game_state = game.GameState()
 
     # store the previous observations in replay memory
-    self.D = deque()
+    D = deque()
     
     # printing
-    self.a_file = open("logs_" + self.argsPassed.game_log_name + "/readout.txt", 'w')
-    self.h_file = open("logs_" + self.argsPassed.game_log_name + "/hidden.txt", 'w')
+    a_file = open("logs_" + self.argsPassed.game_log_name + "/readout.txt", 'w')
+    h_file = open("logs_" + self.argsPassed.game_log_name + "/hidden.txt", 'w')
 
     # get the first state by doing nothing and preprocess the image to 80x80x4
-    self.do_nothing = np.zeros(self.argsPassed.action_count)
-    self.do_nothing[0] = 1
-    self.x_t, self.r_0, self.terminal = self.game_state.frame_step(self.do_nothing)
-    self.x_t = cv2.cvtColor(cv2.resize(self.x_t, (80, 80)), cv2.COLOR_BGR2GRAY)
-    self.ret, self.x_t = cv2.threshold(self.x_t, 1, 255, cv2.THRESH_BINARY)
-    self.s_t = np.stack((self.x_t, self.x_t, self.x_t, self.x_t), axis = 2)
+    do_nothing = np.zeros(self.argsPassed.action_count)
+    do_nothing[0] = 1
+    x_t, r_0,r_1, terminal = self.game_state.frame_step(do_nothing,do_nothing)
+    x_t = cv2.cvtColor(cv2.resize(x_t, (80, 80)), cv2.COLOR_BGR2GRAY)
+    ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
+    s_t = np.stack((x_t, x_t, x_t, x_t), axis = 2)
     '''
     if(self.argsPassed.figure):
       fig = plt.figure()
-      plt.imshow(self.x_t.T)
+      plt.imshow(x_t.T)
       fig.savefig(self.argsPassed.figure_name)
     '''
 
     import time
     #time.sleep(5)
     # saving and loading networks
-    self.saver = tf.train.Saver()
-    self.sess.run(tf.initialize_all_variables())
-    self.checkpoint = tf.train.get_checkpoint_state("saved_networks/")
-    print self.checkpoint.model_checkpoint_path
-    #self.saver.restore(sess, checkpoint.model_checkpoint_path)
-    if self.checkpoint and self.checkpoint.model_checkpoint_path:
-      self.saver.restore(self.sess, self.checkpoint.model_checkpoint_path)
-      print "Successfully loaded:", self.checkpoint.model_checkpoint_path
+    saver = tf.train.Saver()
+    sess.run(tf.initialize_all_variables())
+    checkpoint = tf.train.get_checkpoint_state("saved_networks/")
+    print checkpoint.model_checkpoint_path
+    #saver.restore(sess, checkpoint.model_checkpoint_path)
+    if checkpoint and checkpoint.model_checkpoint_path:
+      saver.restore(sess, checkpoint.model_checkpoint_path)
+      print "Successfully loaded:", checkpoint.model_checkpoint_path
     else:
       print "Could not find old network weights"
     
-    self.epsilon = self.argsPassed.initial_epsilon
-    self.t = 0
+    epsilon = self.argsPassed.initial_epsilon
+    t = 0
     
-    self.net_flag = 0
-    self.cnt = 0
+    net_flag = 0
+    cnt = 0
     while True:
       # choose an action epsilon greedily
-      if self.net_flag == 0:
-        self.readout_t = self.readout_net1.eval(feed_dict = {s : [self.s_t]})[0]
-        self.readout_bt = self.readout_netb1.eval(feed_dict = {s : [self.s_t]})[0]
-      else:
-        self.readout_t = self.readout_net2.eval(feed_dict = {s : [self.s_t]})[0]
-        self.readout_bt = self.readout_netb2.eval(feed_dict = {s : [self.s_t]})[0]
+      if net_flag == 0:
+        readout_t = readout_net1.eval(feed_dict = {s : [s_t]})[0]
+        readout_bt = readout_netb1.eval(feed_dict = {s : [s_t]})[0]
 
-      self.a_t = np.zeros([self.argsPassed.action_count])
-      self.a_bt = np.zeros([self.argsPassed.action_count])
+      else:
+        readout_t = readout_net2.eval(feed_dict = {s : [s_t]})[0]
+        readout_bt = readout_netb2.eval(feed_dict = {s : [s_t]})[0]
+
+      a_t = np.zeros([self.argsPassed.action_count])
+      a_bt = np.zeros([self.argsPassed.action_count])
       
-      self.action_index = 0
-      if random.random() <= self.epsilon or self.t <= self.argsPassed.observation_count:
-        self.action_index = random.randrange(self.argsPassed.action_count)
-        self.a_t[self.action_index] = 1
+      action_index = 0
+      if random.random() <= epsilon or t <= self.argsPassed.observation_count:
+        action_index = random.randrange(self.argsPassed.action_count)
+        a_t[action_index] = 1
       else:
-        self.action_index = np.argmax(self.readout_t)
-        self.a_t[self.action_index] = 1
+        action_index = np.argmax(readout_t)
+        a_t[action_index] = 1
 
-      self.action_indexb = 0
-      if random.random() <= self.epsilon or self.t <= self.argsPassed.observation_count:
-        self.action_indexb = random.randrange(self.argsPassed.action_count)
-        self.a_bt[self.action_indexb] = 1
+      action_indexb = 0
+      if random.random() <= epsilon or t <= self.argsPassed.observation_count:
+        action_indexb = random.randrange(self.argsPassed.action_count)
+        a_bt[action_indexb] = 1
       else:
-        self.action_indexb = np.argmax(self.readout_bt)
-        self.a_bt[self.action_indexb] = 1
+        action_indexb = np.argmax(readout_bt)
+        a_bt[action_indexb] = 1
 
       # scale down epsilon
-      if self.epsilon > self.argsPassed.final_epsilon and self.t > self.argsPassed.observation_count:
-        self.epsilon -= (self.argsPassed.initial_epsilon - self.argsPassed.final_epsilon) / self.argsPassed.explore_frames
+      if epsilon > self.argsPassed.final_epsilon and t > self.argsPassed.observation_count:
+        epsilon -= (self.argsPassed.initial_epsilon - self.argsPassed.final_epsilon) / self.argsPassed.explore_frames
       
       for i in range(0, self.argsPassed.k):
         # run the selected action and observe next state and reward
-        self.x_t1_col, self.r_t, self.terminal = self.game_state.frame_step(self.a_t)
-        self.x_t1 = cv2.cvtColor(cv2.resize(self.x_t1_col, (80, 80)), cv2.COLOR_BGR2GRAY)
-        self.ret, self.x_t1 = cv2.threshold(self.x_t1, 1, 255, cv2.THRESH_BINARY)
-        self.x_t1 = np.reshape(self.x_t1, (80, 80, 1))
-        self.s_t1 = np.append( self.s_t[:,:,1:], self.x_t1, axis = 2)
+        x_t1_col, r_t,r_bt, terminal = self.game_state.frame_step(a_t,a_bt)
+        x_t1 = cv2.cvtColor(cv2.resize(x_t1_col, (80, 80)), cv2.COLOR_BGR2GRAY)
+        ret, x_t1 = cv2.threshold(x_t1,1,255,cv2.THRESH_BINARY)
+        x_t1 = np.reshape(x_t1, (80, 80, 1))
+        s_t1 = np.append( s_t[:,:,1:],x_t1, axis = 2)
         # store the transition in D
         '''
         if t==5:
-          self.fig1 = plt.figure()
-          plt.imshow(self.s_t[:,:,0].T)
-          self.fig1.savefig('trrr_1.png')
+          fig1 = plt.figure()
+          plt.imshow(s_t[:,:,0].T)
+          fig1.savefig('trrr_1.png')
 
-          self.fig2 = plt.figure()
-          plt.imshow( self.s_t[:,:,1].T)
-          self.fig2.savefig('trrr_2.png')
+          fig2 = plt.figure()
+          plt.imshow(s_t[:,:,1].T)
+          fig2.savefig('trrr_2.png')
 
-          self.fig3 = plt.figure()
-          plt.imshow( self.s_t[:,:,2].T)
-          self.fig3.savefig('trrr_3.png')
+          fig3 = plt.figure()
+          plt.imshow(s_t[:,:,2].T)
+          fig3.savefig('trrr_3.png')
 
-          self.fig4 = plt.figure()
-          plt.imshow( self.s_t[:,:,3].T)
-          self.fig4.savefig('trrr_4.png')
+          fig4 = plt.figure()
+          plt.imshow(s_t[:,:,3].T)
+          fig4.savefig('trrr_4.png')
 
           time.sleep(5)
         '''
-        #self.D.append((s_t, a_t, r_t,a_bt,r_bt, s_t1, terminal))
-        self.D.append(( self.s_t, self.a_t, self.r_t, self.s_t1, self.terminal))
-        if len(self.D) > self.argsPassed.replay_memory:
-          self.D.popleft()
+        D.append((s_t, a_t, r_t,a_bt,r_bt, s_t1, terminal))
+        if len(D) > self.argsPassed.replay_memory:
+          D.popleft()
       
       # only train if done observing
-      if self.t > self.argsPassed.observation_count:
+      if t > self.argsPassed.observation_count:
         
-        self.cnt = self.cnt + 1
+        cnt = cnt+1
         # sample a minibatch to train on
         '''
         minibatch = random.sample(D, BATCH)
@@ -261,33 +252,31 @@ class DoubleDeepQLearning:
           train_step_netb1.run( feed_dict = {y_netb1 : yb_batch,a_netb1 : ab_batch, s : s_j_batch} )
         '''
       # update the old values
-        if self.cnt % self.argsPassed.switch_net == 0:
-          if self.net_flag == 0:
-            self.net_flag = 1
+        if cnt % self.argsPassed.switch_net == 0:
+          if net_flag == 0:
+            net_flag = 1
           else:
-            self.net_flag = 0
+            net_flag = 0
           #print 'SwitchState'
-      self.s_t = self.s_t1
-      self.t += 1
+      s_t = s_t1
+      t += 1
 
       # print info
-      self.state = ""
-      if self.t <= self.argsPassed.observation_count:
-        self.state = "observe"
-      elif self.t > self.argsPassed.observation_count and self.t <= self.argsPassed.observation_count + self.argsPassed.explore_frames:
-        self.state = "explore"
+      state = ""
+      if t <= self.argsPassed.observation_count:
+        state = "observe"
+      elif t > self.argsPassed.observation_count and t <= self.argsPassed.observation_count + self.argsPassed.explore_frames:
+        state = "explore"
       else:
-        self.state = "train"
-      #if self.r_t != 0:
+        state = "train"
+      #if r_t != 0:
       #  print "TIMESTEP", t, "/ STATE", state, "/ LINES", self.game_state.total_lines, "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, "/ Q_MAX %e" % np.max(readout_t)
 
-      '''
       if r_bt != 0:
         print "TIMESTEP", t, "/ STATE", state, "/ EPSILON", epsilon, "/ ACTION", action_indexb, "/ REWARD", r_bt, "/ Q_MAX %e" % np.max(readout_bt)
-      '''
 
-      if self.r_t != 0:
-        print "TIMESTEP", self.t, "/ STATE", self.state, "/ EPSILON", self.epsilon, "/ ACTION", self.action_index, "/ REWARD", self.r_t, "/ Q_MAX %e" % np.max(self.readout_t)
+      if r_t != 0:
+        print "TIMESTEP", t, "/ STATE", state, "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, "/ Q_MAX %e" % np.max(readout_t)
       # write info to files
       '''
       if t % 10000 <= 100:
@@ -295,8 +284,8 @@ class DoubleDeepQLearning:
         h_file.write(",".join([str(x) for x in h_fc1.eval(feed_dict={s:[s_t]})[0]]) + '\n')
         cv2.imwrite("logs_tetris/frame" + str(t) + ".png", x_t1)
       '''
-      if(self.t and self.t % self.argsPassed.terminate_prompt == 0):
-        print "TIMESTEP = " + str(self.t)
+      if(t and t % self.argsPassed.terminate_prompt == 0):
+        print "TIMESTEP = " + str(t)
         if(self.yes_or_no("Want to terminate the code")):
           return
         else:
@@ -307,12 +296,10 @@ class DoubleDeepQLearning:
     self.s = tf.placeholder("float", [None, 80, 80, 4])
     #Player 1
     self.readout_net1, self.h_fc1_net1 = self.createNetwork(self.s)
-    self.readout_netb1, self.h_fc1_netb1 = self.createNetwork(self.s)
+    self.readout_net2, self.h_fc1_net2 = self.createNetwork(self.s)
     
     #Player 2
-    self.readout_net2, self.h_fc1_net2 = self.createNetwork(self.s)
+    self.readout_netb1, self.h_fc1_netb1 = self.createNetwork(self.s)
     self.readout_netb2, self.h_fc1_netb2 = self.createNetwork(self.s)
 
-    self.trainNetwork(self.s, self.readout_net1, self.readout_net2, self.readout_netb1, self.readout_netb2, self.sess)
-    #self.trainNetwork(self.s, self.sess)
-    #self.trainNetwork(self.s, self.readout_net1, self.readout_netb1, self.sess)
+    self.trainNetwork(self.s, self.readout_net1,self.readout_net2, self.readout_netb1, self.readout_netb2, self.sess)
