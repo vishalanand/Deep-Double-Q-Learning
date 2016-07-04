@@ -9,14 +9,18 @@ from sys import exit
 import random
 import pygame.surfarray as surfarray
 import matplotlib.pyplot as plt
+from random import randint
 
 class GameState:
-    def __init__(self):
+    def __init__(self, name):
 
         position = 5, 325
         os.environ['SDL_VIDEO_WINDOW_POS'] = str(position[0]) + "," + str(position[1])
         pygame.init()
         self.screen = pygame.display.set_mode((640,480),0,32)
+        self.cnt = str(randint(1, 100))
+        self.cnt = name
+        #pygame.display.set_caption(title, str(randint(1, 100)))
         #screen = pygame.display.set_mode((640,480),pygame.NOFRAME)
         #Creating 2 bars, a ball and background.
         self.back = pygame.Surface((640,480))
@@ -27,8 +31,10 @@ class GameState:
         self.bar1.fill((0,255,255))
         self.bar2 = self.bar.convert()
         self.bar2.fill((255,255,255))
+        #self.bar2.fill((randint(0, 255),randint(0, 255),randint(0, 255)))
         self.circ_sur = pygame.Surface((15,15))
-        self.circ = pygame.draw.circle(self.circ_sur,(255,255,255),(15/2,15/2),15/2)
+        #self.circ = pygame.draw.circle(self.circ_sur,(255,255,255),(15/2,15/2),15/2)
+        self.circ = pygame.draw.circle(self.circ_sur,(randint(0, 255),randint(0, 255),randint(0, 255)),(15/2,15/2),15/2)
         self.circle = self.circ_sur.convert()
         self.circle.set_colorkey((0,0,0))
         self.font = pygame.font.SysFont("calibri",40)
@@ -70,6 +76,7 @@ class GameState:
         self.screen.blit(self.circle,(self.circle_x,self.circle_y))
         self.screen.blit(self.score1,(250.,210.))
         self.screen.blit(self.score2,(380.,210.))
+        pygame.display.set_caption(self.cnt)
 
         self.bar1_y += self.bar1_move
         

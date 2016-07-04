@@ -1,4 +1,4 @@
-import sys, copy, argparse, subprocess
+import sys, copy, argparse, subprocess, time
 sys.path.append("Wrapped Game Code/")
 from threading import Thread
 from DoubleQLearning import DoubleDeepQLearning
@@ -8,15 +8,60 @@ def main():
   obj1 = DoubleDeepQLearning(args)
   obj2 = DoubleDeepQLearning(args)
   '''
-  t1 = Thread(target=DoubleDeepQLearning, args=(args,))
-  t2 = Thread(target=DoubleDeepQLearning, args=(args,))
+  if args.thread_count > 0:
+    t1 = Thread(target=DoubleDeepQLearning, args=(args,))
+  if args.thread_count > 1:
+    t2 = Thread(target=DoubleDeepQLearning, args=(args,))
+  if args.thread_count > 2:
+    t3 = Thread(target=DoubleDeepQLearning, args=(args,))
+  if args.thread_count > 3:
+    t4 = Thread(target=DoubleDeepQLearning, args=(args,))
+  if args.thread_count > 4:
+    t5 = Thread(target=DoubleDeepQLearning, args=(args,))
+  if args.thread_count > 5:
+    t6 = Thread(target=DoubleDeepQLearning, args=(args,))
+  if args.thread_count > 6:
+    t7 = Thread(target=DoubleDeepQLearning, args=(args,))
+  if args.thread_count > 7:
+    t8 = Thread(target=DoubleDeepQLearning, args=(args,))
+  
+  if args.thread_count > 0:
+    t1.start()
+  if args.thread_count > 1:
+    t2.start()
+  if args.thread_count > 2:
+    t3.start()
+  if args.thread_count > 3:
+    t4.start()
+  if args.thread_count > 4:
+    t5.start()
+  if args.thread_count > 5:
+    t6.start()
+  if args.thread_count > 6:
+    t7.start()
+  if args.thread_count > 7:
+    t8.start()
+  
+  if args.thread_count > 0:
+    t1.join()
+  if args.thread_count > 1:
+    t2.join()
+  if args.thread_count > 2:
+    t3.join()
+  if args.thread_count > 3:
+    t4.join()
+  if args.thread_count > 4:
+    t5.join()
+  if args.thread_count > 5:
+    t6.join()
+  if args.thread_count > 6:
+    t7.join()
+  if args.thread_count > 8:
+    t8.join()
 
-  t1.start()
-  t2.start()
-
-  t1.join()
-  t2.join()
-
+  while True:
+    time.sleep(1)
+  
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument("-game", "--game-log-name", help="Name of the game being played for log files", default='pong')
@@ -35,6 +80,7 @@ if __name__ == "__main__":
   parser.add_argument("-figname", "--figure-name", help="figure name", default="trrr.png")
   parser.add_argument("-terminateprompt", "--terminate-prompt", help="terminate step prompt ", type=int, default=1000)
   parser.add_argument("-v", "--verbosity", help="increase output verbosity", action="store_true")
+  parser.add_argument("-threadcnt", "--thread_count", help="Number of threads", type=int, default=8)
   parser.add_argument("-arg", "--arguments", help="print out the arguments entered", action="store_true")
   args = parser.parse_args()
     
@@ -55,5 +101,6 @@ if __name__ == "__main__":
     print "args.figure_name"        + "\t" + str(args.figure_name)
     print "args.terminate_prompt"   + "\t" + str(args.terminate_prompt)
     print "args.verbosity"          + "\t" + str(args.verbosity)
+    print "args.thread_count"       + "\t" + str(args.thread_count)
     print "args.arguments"          + "\t" + str(args.arguments) + "\n"
   main()
