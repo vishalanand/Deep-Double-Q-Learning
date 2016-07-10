@@ -1,63 +1,94 @@
 import sys, copy, argparse, subprocess, time
 sys.path.append("Wrapped Game Code/")
 from threading import Thread
+import threading
 from DoubleQLearning import DoubleDeepQLearning
+import time, random, sys, collections
+from multiprocessing import Process as Task, Queue
+
+def download(status, filename):
+  count = random.randint(5, 30)
+  for i in range(count):
+    status.put([filename, (i+1.0)/count])
+    time.sleep(0.1)
+
+def print_progress(progress):
+  sys.stdout.write('\033[2J\033[H') #clear screen
+  for filename, percent in progress.items():
+    bar = ('=' * int(percent * 20)).ljust(20)
+    percent = int(percent * 100)
+    sys.stdout.write("%s [%s] %s%%\n" % (filename, bar, percent))
+  sys.stdout.flush()
 
 def main():
+  status = Queue()
+  progress = collections.OrderedDict()
+  workers = []
+  lock = threading.Lock()
+  jobs = []
+  for filename in xrange(0, args.thread_count):
+    #jobs[filename] = Thread(target=DoubleDeepQLearning, args=(args, lock, status))
+    jobs.insert(filename, Thread(target=DoubleDeepQLearning, args=(args, lock)))
+    #progress[filename] = 0.0
+
+  for job in jobs:
+    #counters[filename] = job.t
+    job.start()
+
+  time.sleep(20)
+  sys.stdout.write('\033[2J\033[H') #clear screen
+
+  while any(i.is_alive() for i in jobs):
+    '''
+    for k, v in d.iteritems():
+      print k, v
+    cars = __import__('DoubleQLearning').indexing
+    for x, y in cars.iteritems:
+      #print (x), cars.[(x)]
+      print x, y
+    '''
+    indexingGet = __import__('DoubleQLearning').indexing
+    sys.stdout.write('\033[H')
+    for x in indexingGet:
+      sys.stdout.write("%s : %d \n" % (x, indexingGet[x]))
+      #sys.stdout.write("%s [%s] %s%%\n" % (filename, bar, percent))
+      #print x, indexingGet[x]
+      '''
+      for filename, percent in progress.items():
+        bar = ('=' * int(percent * 20)).ljust(20)
+        percent = int(percent * 100)
+      '''
+    sys.stdout.flush()
+    time.sleep(10)
+    '''
+    while not indexing.empty():
+      filename, percent = status.get()
+      progress[filename] = percent
+      print_progress(progress)
+    '''
+  print 'all downloads complete'
+  '''
+  for job in jobs:
+    job.join()
+  '''
+  '''
+  child.start()
+  workers.append(child)
+  counter = __import__('DoubleQLearning').DoubleDeepQLearning.t
+
+  print "The value extracted is", counter
+  while any(i.is_alive() for i in workers):
+    time.sleep(0.1)
+    while not status.empty():
+      filename, percent = status.get()
+      progress[filename] = percent
+      print_progress(progress)
+  print 'all downloads complete'
+  '''
   '''
   obj1 = DoubleDeepQLearning(args)
   obj2 = DoubleDeepQLearning(args)
   '''
-  if args.thread_count > 0:
-    t1 = Thread(target=DoubleDeepQLearning, args=(args,))
-  if args.thread_count > 1:
-    t2 = Thread(target=DoubleDeepQLearning, args=(args,))
-  if args.thread_count > 2:
-    t3 = Thread(target=DoubleDeepQLearning, args=(args,))
-  if args.thread_count > 3:
-    t4 = Thread(target=DoubleDeepQLearning, args=(args,))
-  if args.thread_count > 4:
-    t5 = Thread(target=DoubleDeepQLearning, args=(args,))
-  if args.thread_count > 5:
-    t6 = Thread(target=DoubleDeepQLearning, args=(args,))
-  if args.thread_count > 6:
-    t7 = Thread(target=DoubleDeepQLearning, args=(args,))
-  if args.thread_count > 7:
-    t8 = Thread(target=DoubleDeepQLearning, args=(args,))
-  
-  if args.thread_count > 0:
-    t1.start()
-  if args.thread_count > 1:
-    t2.start()
-  if args.thread_count > 2:
-    t3.start()
-  if args.thread_count > 3:
-    t4.start()
-  if args.thread_count > 4:
-    t5.start()
-  if args.thread_count > 5:
-    t6.start()
-  if args.thread_count > 6:
-    t7.start()
-  if args.thread_count > 7:
-    t8.start()
-  
-  if args.thread_count > 0:
-    t1.join()
-  if args.thread_count > 1:
-    t2.join()
-  if args.thread_count > 2:
-    t3.join()
-  if args.thread_count > 3:
-    t4.join()
-  if args.thread_count > 4:
-    t5.join()
-  if args.thread_count > 5:
-    t6.join()
-  if args.thread_count > 6:
-    t7.join()
-  if args.thread_count > 8:
-    t8.join()
 
   while True:
     time.sleep(1)

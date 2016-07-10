@@ -15,13 +15,19 @@ import subprocess
 from collections import deque
 import logging
 
+indexing = {}
+
 class DoubleDeepQLearning:
-  def __init__(self, argsCallPassed):
+  def __init__(self, argsCallPassed, lock):
+    self.argsPassed = copy.deepcopy(argsCallPassed)
+    self.lock = lock
+    self.t = 0
+    indexing[threading.current_thread().name] = self.t
+    print "This is", threading.current_thread().name
     logging.basicConfig(filename="DoubleQLearning" + threading.current_thread().name + ".log",level=logging.DEBUG)
     logging.debug('This message should go to the log file')
     logging.info('So should this')
     logging.warning('And this, too')
-    self.argsPassed = copy.deepcopy(argsCallPassed)
     self.playGame()
 
   def weight_variable(self, shape):
@@ -115,7 +121,7 @@ class DoubleDeepQLearning:
     
     # open up a game state to communicate with emulator
     #self.game = copy.deepcopy(game)
-    self.game_state = game.GameState(threading.current_thread().name)
+    self.game_state = game.GameState(threading.current_thread().name, self.lock)
     #self.game_state = game.GameState()
 
     # store the previous observations in replay memory
@@ -154,7 +160,6 @@ class DoubleDeepQLearning:
       print "Could not find old network weights"
     
     self.epsilon = self.argsPassed.initial_epsilon
-    self.t = 0
     
     self.net_flag = 0
     self.cnt = 0
@@ -227,7 +232,8 @@ class DoubleDeepQLearning:
       if self.t > self.argsPassed.observation_count:
         
         self.cnt = self.cnt + 1
-        print "??"
+        if self.argsPassed.verbosity:
+          print "??"
         # sample a minibatch to train on
         '''
         minibatch = random.sample(D, BATCH)
@@ -283,13 +289,19 @@ class DoubleDeepQLearning:
       self.state = ""
       if self.t <= self.argsPassed.observation_count:
         self.state = "observe"
-        print threading.current_thread().name, self.state, self.t
+        if self.argsPassed.verbosity:
+          print threading.current_thread().name, self.state, self.t
       elif self.t > self.argsPassed.observation_count and self.t <= self.argsPassed.observation_count + self.argsPassed.explore_frames:
         self.state = "explore"
-        print threading.current_thread().name, self.state, self.t
+        if self.argsPassed.verbosity:
+          print threading.current_thread().name, self.state, self.t
       else:
         self.state = "train"
-        print threading.current_thread().name, self.state, self.t
+        if self.argsPassed.verbosity:
+          print threading.current_thread().name, self.state, self.t
+      indexing[threading.current_thread().name] = self.t
+      if self.argsPassed.verbosity:
+        print "Assigned to", threading.current_thread().name, "value", indexing[threading.current_thread().name]
       #if self.r_t != 0:
       #  print "TIMESTEP", t, "/ STATE", state, "/ LINES", self.game_state.total_lines, "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, "/ Q_MAX %e" % np.max(readout_t)
 

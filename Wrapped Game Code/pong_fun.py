@@ -10,18 +10,17 @@ import random
 import pygame.surfarray as surfarray
 import matplotlib.pyplot as plt
 from random import randint
+import threading
 
 class GameState:
-    def __init__(self, name):
-
+    def __init__(self, name, lock):
+        self.lock = lock
         position = 5, 325
         os.environ['SDL_VIDEO_WINDOW_POS'] = str(position[0]) + "," + str(position[1])
         pygame.init()
         self.screen = pygame.display.set_mode((640,480),0,32)
         self.cnt = str(randint(1, 100))
         self.cnt = name
-        #pygame.display.set_caption(title, str(randint(1, 100)))
-        #screen = pygame.display.set_mode((640,480),pygame.NOFRAME)
         #Creating 2 bars, a ball and background.
         self.back = pygame.Surface((640,480))
         self.background = self.back.convert()
@@ -65,18 +64,25 @@ class GameState:
         else: # don't move
             self.bar1_move = 0
                 
+        self.lock.acquire()
+        #print "lock acquired for", self.cnt
         self.score1 = self.font.render(str(self.bar1_score), True,(255,255,255))
         self.score2 = self.font.render(str(self.bar2_score), True,(255,255,255))
-
-        self.screen.blit(self.background,(0,0))
-        self.frame = pygame.draw.rect(self.screen,(255,255,255),Rect((5,5),(630,470)),2)
-        self.middle_line = pygame.draw.aaline(self.screen,(255,255,255),(330,5),(330,475))
-        self.screen.blit(self.bar1,(self.bar1_x,self.bar1_y))
-        self.screen.blit(self.bar2,(self.bar2_x,self.bar2_y))
-        self.screen.blit(self.circle,(self.circle_x,self.circle_y))
-        self.screen.blit(self.score1,(250.,210.))
-        self.screen.blit(self.score2,(380.,210.))
+        self.screenGet = pygame.display.get_surface()
+        #self.screen1 = self.screen.copy()
+        self.screenGet.blit(self.background,(0,0))
+        self.frame = pygame.draw.rect(self.screenGet,(255,255,255),Rect((5,5),(630,470)),2)
+        self.middle_line = pygame.draw.aaline(self.screenGet,(255,255,255),(330,5),(330,475))
+        self.screenGet.blit(self.bar1,(self.bar1_x,self.bar1_y))
+        self.screenGet.blit(self.bar2,(self.bar2_x,self.bar2_y))
+        self.screenGet.blit(self.circle,(self.circle_x,self.circle_y))
+        self.screenGet.blit(self.score1,(250.,210.))
+        self.screenGet.blit(self.score2,(380.,210.))
+        #print "lock released for", self.cnt
         pygame.display.set_caption(self.cnt)
+        image_data = pygame.surfarray.array3d(pygame.display.get_surface())
+        pygame.display.update()
+        self.lock.release()
 
         self.bar1_y += self.bar1_move
         
@@ -130,10 +136,6 @@ class GameState:
 
         self.circle_x += self.speed_x
         self.circle_y += self.speed_y
-
-        image_data = pygame.surfarray.array3d(pygame.display.get_surface())
-
-        pygame.display.update()
 
         terminal = False
         if max(self.bar1_score, self.bar2_score) >= 20:
