@@ -27,71 +27,28 @@ def main():
   lock = threading.Lock()
   jobs = []
   for filename in xrange(0, args.thread_count):
-    #jobs[filename] = Thread(target=DoubleDeepQLearning, args=(args, lock, status))
     jobs.insert(filename, Thread(target=DoubleDeepQLearning, args=(args, lock)))
-    #progress[filename] = 0.0
 
   for job in jobs:
-    #counters[filename] = job.t
     job.start()
 
+  #exit()
   time.sleep(20)
   sys.stdout.write('\033[2J\033[H') #clear screen
 
   while any(i.is_alive() for i in jobs):
-    '''
-    for k, v in d.iteritems():
-      print k, v
-    cars = __import__('DoubleQLearning').indexing
-    for x, y in cars.iteritems:
-      #print (x), cars.[(x)]
-      print x, y
-    '''
     indexingGet = __import__('DoubleQLearning').indexing
     sys.stdout.write('\033[H')
     for x in indexingGet:
       sys.stdout.write("%s : %d \n" % (x, indexingGet[x]))
-      #sys.stdout.write("%s [%s] %s%%\n" % (filename, bar, percent))
-      #print x, indexingGet[x]
-      '''
-      for filename, percent in progress.items():
-        bar = ('=' * int(percent * 20)).ljust(20)
-        percent = int(percent * 100)
-      '''
     sys.stdout.flush()
     time.sleep(10)
-    '''
-    while not indexing.empty():
-      filename, percent = status.get()
-      progress[filename] = percent
-      print_progress(progress)
-    '''
   print 'all downloads complete'
   '''
-  for job in jobs:
-    job.join()
-  '''
-  '''
-  child.start()
-  workers.append(child)
-  counter = __import__('DoubleQLearning').DoubleDeepQLearning.t
-
-  print "The value extracted is", counter
-  while any(i.is_alive() for i in workers):
-    time.sleep(0.1)
-    while not status.empty():
-      filename, percent = status.get()
-      progress[filename] = percent
-      print_progress(progress)
-  print 'all downloads complete'
-  '''
-  '''
-  obj1 = DoubleDeepQLearning(args)
-  obj2 = DoubleDeepQLearning(args)
-  '''
-
   while True:
     time.sleep(1)
+  '''
+  time.sleep(1)
   
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()

@@ -3,7 +3,7 @@ import cv2, sys, random, select
 import copy
 import threading
 from threading import Thread
-sys.path.append("Wrapped Game Code/")
+sys.path.append("WrappedGameCode/")
 
 # whichever is imported "as game" will be used
 import pong_fun as game
@@ -14,6 +14,7 @@ from threading import Thread
 import subprocess
 from collections import deque
 import logging
+from logging.handlers import TimedRotatingFileHandler
 
 indexing = {}
 
@@ -23,12 +24,29 @@ class DoubleDeepQLearning:
     self.lock = lock
     self.t = 0
     indexing[threading.current_thread().name] = self.t
-    print "This is", threading.current_thread().name
-    logging.basicConfig(filename="DoubleQLearning" + threading.current_thread().name + ".log",level=logging.DEBUG)
-    logging.debug('This message should go to the log file')
-    logging.info('So should this')
-    logging.warning('And this, too')
-    self.playGame()
+    self.fileName = threading.current_thread().name
+    print "This is", self.fileName
+
+    '''
+    self.logger.debug('This message should go to the log file')
+    self.logger.info('So should this')
+    self.logger.warning('And this, too')
+    '''
+    self.logger = logging.getLogger(__name__)
+    self.logger.setLevel(logging.DEBUG)
+
+    # create a file handler
+    self.handler = logging.FileHandler('logs/' + self.fileName + '.log')
+    self.handler.acquire()
+    self.handler.setLevel(logging.DEBUG)
+    self.handler.setFormatter(logging.Formatter('%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s'))
+
+    # add the handlers to the logger
+    self.logger.addHandler(self.handler)
+    self.handler.release()
+    self.logger.propagate = False
+    self.logger.info('Hello baby')
+    #self.playGame()
 
   def weight_variable(self, shape):
     return tf.Variable(tf.truncated_normal(shape, stddev = 0.01))
