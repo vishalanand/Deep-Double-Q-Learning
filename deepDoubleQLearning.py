@@ -6,44 +6,45 @@ from DoubleQLearning import DoubleDeepQLearning
 import time, random, sys, collections
 from multiprocessing import Process as Task, Queue
 
-def download(status, filename):
-  count = random.randint(5, 30)
-  for i in range(count):
-    status.put([filename, (i+1.0)/count])
-    time.sleep(0.1)
-
-def print_progress(progress):
-  sys.stdout.write('\033[2J\033[H') #clear screen
-  for filename, percent in progress.items():
-    bar = ('=' * int(percent * 20)).ljust(20)
-    percent = int(percent * 100)
-    sys.stdout.write("%s [%s] %s%%\n" % (filename, bar, percent))
-  sys.stdout.flush()
-
 def main():
   status = Queue()
   progress = collections.OrderedDict()
   workers = []
   lock = threading.Lock()
   jobs = []
+
+  #while True:
   for filename in xrange(0, args.thread_count):
     jobs.insert(filename, Thread(target=DoubleDeepQLearning, args=(args, lock)))
 
+  print "The number of jobs = " + str(len(jobs))
   for job in jobs:
     job.start()
 
-  #exit()
-  time.sleep(20)
-  sys.stdout.write('\033[2J\033[H') #clear screen
+  for job in jobs:
+    job.join()
 
+  print "Hello there, the join has happened"
+  jobs[:] = []
+  print "The number of jobs = " + str(len(jobs))
+  exit()
+  #return
+
+  #exit()
+  #time.sleep(20)
+  #sys.stdout.write('\033[2J\033[H') #clear screen
+
+  '''
   while any(i.is_alive() for i in jobs):
     indexingGet = __import__('DoubleQLearning').indexing
-    sys.stdout.write('\033[H')
+    #sys.stdout.write('\033[H')
     for x in indexingGet:
       sys.stdout.write("%s : %d \n" % (x, indexingGet[x]))
     sys.stdout.flush()
     time.sleep(10)
   print 'all downloads complete'
+  '''
+
   '''
   while True:
     time.sleep(1)

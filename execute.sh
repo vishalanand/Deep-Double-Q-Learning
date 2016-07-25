@@ -2,8 +2,8 @@ python deepDoubleQLearning.py \
 	-game pong \
 	-actions 3 \
 	-gamma 0.99 \
-	-obs 250 \
-	-explore 220 \
+	-obs 25 \
+	-explore 22 \
 	-initialeps 0.07 \
 	-finaleps 0.07 \
 	-replay 10000 \
@@ -13,5 +13,5 @@ python deepDoubleQLearning.py \
 	-fig \
 	-figname saveTrrr.png \
 	-terminateprompt 10000 \
-	-threadcnt 8 \
+	-threadcnt 2 \
 	-arg

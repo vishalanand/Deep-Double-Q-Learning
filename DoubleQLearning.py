@@ -25,7 +25,12 @@ class DoubleDeepQLearning:
     self.t = 0
     indexing[threading.current_thread().name] = self.t
     self.fileName = threading.current_thread().name
+    self.gameCnt = 0
+    self.gameThreadName = threading.current_thread().name
+    print self.gameThreadName + " Game count: " + str(self.gameCnt)
     print "This is", self.fileName
+    #threading.current_thread().exit()
+    #threading.Event().set()
 
     '''
     self.logger.debug('This message should go to the log file')
@@ -225,7 +230,7 @@ class DoubleDeepQLearning:
         # run the selected action and observe next state and reward
         self.x_t1_col, self.r_t, self.terminal = self.game_state.frame_step(self.a_t)
         self.x_t1 = cv2.cvtColor(cv2.resize(self.x_t1_col, (80, 80)), cv2.COLOR_BGR2GRAY)
-        self.ret, self.x_t1 = cv2.threshold(self.x_t1, 1, 255, cv2.THRESH_BINARY)
+        self.ret, self.x_t1 = cv2.threshold(self.x_t1, 1, 255, cv2.THRESH_BINARY) 
         self.x_t1 = np.reshape(self.x_t1, (80, 80, 1))
         self.s_t1 = np.append( self.s_t[:,:,1:], self.x_t1, axis = 2)
         # store the transition in D
@@ -253,6 +258,9 @@ class DoubleDeepQLearning:
         self.D.append(( self.s_t, self.a_t, self.r_t, self.s_t1, self.terminal))
         if len(self.D) > self.argsPassed.replay_memory:
           self.D.popleft()
+
+        if self.terminal is True:
+          break;
       
       # only train if done observing
       if self.t > self.argsPassed.observation_count:
@@ -301,7 +309,7 @@ class DoubleDeepQLearning:
           train_step_net1.run( feed_dict = {y_net1 : y_batch,a_net1 : a_batch, s : s_j_batch} )
           train_step_netb1.run( feed_dict = {y_netb1 : yb_batch,a_netb1 : ab_batch, s : s_j_batch} )
         '''
-      # update the old values
+        # update the old values
         if self.cnt % self.argsPassed.switch_net == 0:
           if self.net_flag == 0:
             self.net_flag = 1
@@ -323,6 +331,12 @@ class DoubleDeepQLearning:
           print threading.current_thread().name, self.state, self.t
       else:
         self.state = "train"
+        if self.terminal is True:
+          self.gameCnt = self.gameCnt + 1
+          print self.gameThreadName + ": The game has now ended " + str(self.gameCnt)
+        if self.gameCnt > 0:
+          print self.gameThreadName + "game exiting"
+          exit()
         if self.argsPassed.verbosity:
           print threading.current_thread().name, self.state, self.t
       indexing[threading.current_thread().name] = self.t
