@@ -3,7 +3,7 @@ import cv2, sys, random, select
 import copy
 import threading
 from threading import Thread
-sys.path.append("WrappedGameCode/")
+sys.path.append("Wrapped Game Code/")
 
 # whichever is imported "as game" will be used
 import pong_fun as game
@@ -28,30 +28,33 @@ class DoubleDeepQLearning:
     print "This is", self.fileName
 
     '''
-    self.logger.debug('This message should go to the log file')
-    self.logger.info('So should this')
-    self.logger.warning('And this, too')
-    '''
-    '''
-    self.local = threading.local
-    self.local.logfile = open
+    self.logHandler = logging.handlers.RotatingFileHandler('logs/' + self.fileName)
+    self.logHandler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+    self.logger = logging.getLogger()
+    self.logger.addHandler(self.logHandler)
+    self.logger.setLevel(logging.DEBUG)
 
+    #self.logger.addHandler(self.loghandler)
+    
+    #logger = logging.getLogger()
+
+    self.logger.debug('This message should go to the log file' + self.fileName)
+    self.logger.info('So should this' + self.fileName)
+    self.logger.warning('And this, too' + self.fileName)
+    '''
     self.logger = logging.getLogger(__name__)
     self.logger.setLevel(logging.DEBUG)
 
     # create a file handler
-    self.handler = logging.FileHandler('logs/' + self.fileName + '.log')
-    self.handler.acquire()
+    self.handler = logging.FileHandler('logs/' + self.fileName)
     self.handler.setLevel(logging.DEBUG)
     self.handler.setFormatter(logging.Formatter('%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s'))
 
     # add the handlers to the logger
     self.logger.addHandler(self.handler)
-    self.handler.release()
     self.logger.propagate = False
-    #self.logger.info('Hello baby')
-    '''
-    self.playGame()
+    self.logger.info('Hello baby')
+    #self.playGame()
 
   def weight_variable(self, shape):
     return tf.Variable(tf.truncated_normal(shape, stddev = 0.01))
@@ -116,15 +119,12 @@ class DoubleDeepQLearning:
     i, o, e = select.select( [sys.stdin], [], [], 2 )
     if (i):
       reply = sys.stdin.readline().strip()
-      if reply.length != 1:
-        return False
       if reply[0] == 'y':
         return True
       if reply[0] == 'n':
         return False
       else:
-        return False
-        #return self.yes_or_no("Uhhhh... please enter ")
+        return self.yes_or_no("Uhhhh... please enter ")
     else:
       return False
 

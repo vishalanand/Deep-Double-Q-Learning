@@ -6,12 +6,12 @@ python deepDoubleQLearning.py \
 	-explore 220 \
 	-initialeps 0.07 \
 	-finaleps 0.07 \
-	-replay 250000 \
+	-replay 10000 \
 	-bat 32 \
 	-k 2 \
 	-switchnet 10 \
 	-fig \
 	-figname saveTrrr.png \
-	-terminateprompt 100000 \
+	-terminateprompt 10000 \
 	-threadcnt 8 \
 	-arg
