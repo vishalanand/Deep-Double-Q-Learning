@@ -138,7 +138,7 @@ class GameState:
         self.circle_y += self.speed_y
 
         terminal = False
-        if max(self.bar1_score, self.bar2_score) >= 20:
+        if max(self.bar1_score, self.bar2_score) >= 5:
             self.bar1_score = 0
             self.bar2_score = 0
             terminal = True

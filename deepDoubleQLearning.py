@@ -12,43 +12,43 @@ def main():
   workers = []
   lock = threading.Lock()
   jobs = []
+  genetic_merge = 0
 
-  #while True:
-  for filename in xrange(0, args.thread_count):
-    jobs.insert(filename, Thread(target=DoubleDeepQLearning, args=(args, lock)))
+  while genetic_merge < 3:
+    for filename in xrange(0, args.thread_count):
+      jobs.insert(filename, Thread(target=DoubleDeepQLearning, args=(args, lock)))
 
-  print "The number of jobs = " + str(len(jobs))
-  for job in jobs:
-    job.start()
+    print "The number of jobs = " + str(len(jobs))
+    for job in jobs:
+      job.start()
 
-  for job in jobs:
-    job.join()
+    #print str(sum(bool(i.is_alive) for i in jobs)) + "is the sum of alive jobs"
+    for job in jobs:
+      job.join()
 
-  print "Hello there, the join has happened"
-  jobs[:] = []
-  print "The number of jobs = " + str(len(jobs))
+    genetic_merge = genetic_merge + 1
+
+    print "Thread join iteration" + str(genetic_merge) + "has happened"
+    while any(i.is_alive() for i in jobs):
+      print str(sum(bool(i.is_alive()) for i in jobs)) + "is the sum of alive jobs now"
+    jobs[:] = []
+    
   exit()
-  #return
-
-  #exit()
-  #time.sleep(20)
-  #sys.stdout.write('\033[2J\033[H') #clear screen
 
   '''
+  time.sleep(20)
+  sys.stdout.write('\033[2J\033[H') #clear screen
   while any(i.is_alive() for i in jobs):
+    print "Still alive"
     indexingGet = __import__('DoubleQLearning').indexing
     #sys.stdout.write('\033[H')
     for x in indexingGet:
       sys.stdout.write("%s : %d \n" % (x, indexingGet[x]))
     sys.stdout.flush()
     time.sleep(10)
+  #print any(i.is_alive() for i in jobs)
+  #print str(sum([1 for i in jobs if i.is_alive])) + "is the sum of alive jobs even now"
   print 'all downloads complete'
-  '''
-
-  '''
-  while True:
-    time.sleep(1)
-  time.sleep(1)
   '''
   
 if __name__ == "__main__":
