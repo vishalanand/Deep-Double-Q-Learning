@@ -32,7 +32,7 @@ def main():
     while any(i.is_alive() for i in jobs):
       print str(sum(bool(i.is_alive()) for i in jobs)) + "is the sum of alive jobs now"
     jobs[:] = []
-    
+
   exit()
 
   '''

@@ -176,15 +176,48 @@ class DoubleDeepQLearning:
       fig.savefig(self.argsPassed.figure_name)
     '''
 
+    '''
+    import pickle
+    class Company(object):
+        def __init__(self, name, value):
+            self.name = name
+            self.value = value
+
+    with open('company_data.pkl', 'wb') as output:
+        company1 = Company('banana', 40)
+        pickle.dump(company1, output, pickle.HIGHEST_PROTOCOL)
+
+        company2 = Company('spam', 42)
+        pickle.dump(company2, output, pickle.HIGHEST_PROTOCOL)
+
+    del company1
+    del company2
+
+    with open('company_data.pkl', 'rb') as input:
+        company1 = pickle.load(input)
+        print(company1.name)  # -> banana
+        print(company1.value)  # -> 40
+
+        company2 = pickle.load(input)
+        print(company2.name) # -> spam
+        print(company2.value)  # -> 42
+    
+    def save_object(obj, filename):
+        with open(filename, 'wb') as output:
+            pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
+
+    # sample usage
+    save_object(company1, 'company1.pkl')
+    '''
+
     import time
     #time.sleep(5)
     # saving and loading networks
     self.saver = tf.train.Saver()
     self.sess.run(tf.initialize_all_variables())
     self.checkpoint = tf.train.get_checkpoint_state("saved_networks/")
-    print self.checkpoint.model_checkpoint_path
-    #self.saver.restore(sess, checkpoint.model_checkpoint_path)
     if self.checkpoint and self.checkpoint.model_checkpoint_path:
+      print self.checkpoint.model_checkpoint_path
       self.saver.restore(self.sess, self.checkpoint.model_checkpoint_path)
       print "Successfully loaded:", self.checkpoint.model_checkpoint_path
     else:
@@ -336,7 +369,9 @@ class DoubleDeepQLearning:
           print self.gameThreadName + ": The game has now ended " + str(self.gameCnt)
         if self.gameCnt > 0:
           print self.gameThreadName + "game exiting"
-          exit()
+          self.saver.save(sess, "threads/pong-3dqn-290000-" + self.gameThreadName)
+          #exit()
+          return
         if self.argsPassed.verbosity:
           print threading.current_thread().name, self.state, self.t
       indexing[threading.current_thread().name] = self.t
