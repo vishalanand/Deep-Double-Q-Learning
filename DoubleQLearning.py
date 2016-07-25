@@ -137,6 +137,7 @@ class DoubleDeepQLearning:
   #def trainNetwork(self, s, readout_net1, readout_netb1, sess):
   #def trainNetwork(self, s, sess):
     # define the cost function
+    print "Starts"
     self.s = s
     self.readout_net1 = readout_net1
     self.readout_net2 = readout_net2
@@ -370,6 +371,7 @@ class DoubleDeepQLearning:
         if self.gameCnt > 0:
           print self.gameThreadName + "game exiting"
           self.saver.save(sess, "threads/pong-3dqn-290000-" + self.gameThreadName)
+          #self.game_state.pygame_exit()
           #exit()
           return
         if self.argsPassed.verbosity:

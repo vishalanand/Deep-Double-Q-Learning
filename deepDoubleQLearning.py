@@ -5,6 +5,7 @@ import threading
 from DoubleQLearning import DoubleDeepQLearning
 import time, random, sys, collections
 from multiprocessing import Process as Task, Queue
+import pygame
 
 def main():
   status = Queue()
@@ -15,6 +16,9 @@ def main():
   genetic_merge = 0
 
   while genetic_merge < 3:
+    print "Sleeping for 10 seconds"
+    time.sleep(10)
+    print "Woke up from 10 seconds of sleep"
     for filename in xrange(0, args.thread_count):
       jobs.insert(filename, Thread(target=DoubleDeepQLearning, args=(args, lock)))
 
@@ -32,6 +36,7 @@ def main():
     while any(i.is_alive() for i in jobs):
       print str(sum(bool(i.is_alive()) for i in jobs)) + "is the sum of alive jobs now"
     jobs[:] = []
+    pygame.quit()
 
   exit()
 

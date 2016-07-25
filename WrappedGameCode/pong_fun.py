@@ -14,7 +14,9 @@ import threading
 
 class GameState:
     def __init__(self, name, lock):
+        print ":))))))))))))))))))))))))))))))))))))))))))))))"
         self.lock = lock
+        self.lock.acquire()
         position = 5, 325
         os.environ['SDL_VIDEO_WINDOW_POS'] = str(position[0]) + "," + str(position[1])
         pygame.init()
@@ -37,6 +39,7 @@ class GameState:
         self.circle = self.circ_sur.convert()
         self.circle.set_colorkey((0,0,0))
         self.font = pygame.font.SysFont("calibri",40)
+        self.lock.release()
         
         self.ai_speed = 15.
         self.HIT_REWARD = 0.1
@@ -138,7 +141,7 @@ class GameState:
         self.circle_y += self.speed_y
 
         terminal = False
-        if max(self.bar1_score, self.bar2_score) >= 2:
+        if max(self.bar1_score, self.bar2_score) >= 5:
             self.bar1_score = 0
             self.bar2_score = 0
             terminal = True
