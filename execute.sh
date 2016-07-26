@@ -13,5 +13,5 @@ python deepDoubleQLearning.py \
 	-fig \
 	-figname saveTrrr.png \
 	-terminateprompt 10000 \
-	-threadcnt 8 \
+	-threadcnt 2 \
 	-arg
